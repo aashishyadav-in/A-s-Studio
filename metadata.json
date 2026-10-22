@@ -1,6 +1,0 @@
-{
-  "name": "AuraStudio ERP & Client Portal",
-  "description": "Professional creative & photography studio management platform with admin client-wise database, client deliverables portal, invoice tracking, and exportable Java Spring Boot code.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
