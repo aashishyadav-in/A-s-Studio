@@ -1,0 +1,62 @@
+
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import User from "./models/user.js";
+
+dotenv.config({
+  path: path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    ".env"
+  ),
+});
+
+async function seedAdmin() {
+  try {
+    const { MONGODB_URI, ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } =
+      process.env;
+
+    if (!MONGODB_URI || !ADMIN_NAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+      throw new Error("Required MongoDB or admin environment variables are missing.");
+    }
+
+    if (ADMIN_PASSWORD.length < 12) {
+      throw new Error("Choose an admin password with at least 12 characters.");
+    }
+
+    await mongoose.connect(MONGODB_URI);
+
+    const email = ADMIN_EMAIL.trim().toLowerCase();
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+    const existing = await User.findOne({ email });
+
+    if (existing) {
+      existing.name = ADMIN_NAME;
+      existing.passwordHash = passwordHash;
+      existing.role = "ADMIN";
+      existing.isActive = true;
+      await existing.save();
+      console.log("Existing account updated as active admin using server/.env credentials.");
+      return;
+    }
+
+    await User.create({
+      name: ADMIN_NAME.trim(),
+      email,
+      passwordHash,
+      role: "ADMIN",
+      isActive: true,
+    });
+
+    console.log("Admin account created successfully.");
+  } catch (error) {
+    console.error("Admin setup failed:", error.message);
+    process.exitCode = 1;
+  } finally {
+    await mongoose.disconnect();
+  }
+}
+
+seedAdmin();
